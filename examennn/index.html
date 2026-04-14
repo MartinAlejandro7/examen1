@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DigitalMall PRO</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#f5f7fa}
+
+header{
+  background:#0d6efd;
+  color:#fff;
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+nav a{
+  color:#fff;
+  margin:0 10px;
+  text-decoration:none;
+  font-weight:bold;
+}
+
+.container{padding:20px}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+}
+
+@media(max-width:900px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+}
+
+@media(max-width:500px){
+  .grid{grid-template-columns:1fr}
+}
+
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 4px 10px rgba(0,0,0,.1);
+  text-align:center;
+  transition:.3s;
+}
+
+.card:hover{
+  transform:translateY(-5px);
+}
+
+.card img{
+  width:100%;
+  height:150px;
+  object-fit:contain;
+}
+
+button{
+  background:#0d6efd;
+  color:#fff;
+  border:none;
+  padding:10px;
+  border-radius:6px;
+  cursor:pointer;
+  transition:.3s;
+}
+
+button:hover{background:#0b5ed7}
+
+.badge{
+  background:red;
+  padding:3px 8px;
+  border-radius:50%;
+  font-size:12px;
+  margin-left:5px;
+}
+
+/* Modal */
+.modal{
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,.5);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+
+.modal-content{
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  text-align:center;
+}
+
+table{width:100%;background:#fff;margin-top:20px}
+th,td{padding:10px;text-align:center}
+th{background:#0d6efd;color:#fff}
+
+.total{margin-top:10px;font-weight:bold}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h3>🛒 DigitalMall</h3>
+  <nav>
+    <a href="#" onclick="mostrar('inicio')">Inicio</a>
+    <a href="#" onclick="mostrar('carrito')">Carrito <span id="count" class="badge">0</span></a>
+  </nav>
+</header>
+
+<div id="inicio" class="container">
+  <h2>Productos</h2>
+  <div class="grid" id="productos"></div>
+</div>
+
+<div id="carrito" class="container" style="display:none">
+  <h2>Carrito</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Imagen</th>
+        <th>Nombre</th>
+        <th>Precio</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="listaCarrito"></tbody>
+  </table>
+  <div class="total" id="total">Total: $0</div>
+  <br>
+  <button onclick="comprar()">Comprar</button>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <p id="mensaje"></p>
+    <br>
+    <button onclick="cerrarModal()">Aceptar</button>
+  </div>
+</div>
+
+<script>
+const productos=[
+{id:1,nombre:"Producto 1",precio:100,img:"imagenes/img1.png"},
+{id:2,nombre:"Producto 2",precio:269,img:"imagenes/img2.png"},
+{id:3,nombre:"Producto 3",precio:50,img:"imagenes/img3.png"},
+{id:4,nombre:"Producto 4",precio:66,img:"imagenes/img4.png"},
+{id:5,nombre:"Producto 5",precio:120,img:"imagenes/img5.png"},
+{id:6,nombre:"Producto 6",precio:80,img:"imagenes/img6.png"},
+{id:7,nombre:"Producto 7",precio:200,img:"imagenes/img7.png"},
+{id:8,nombre:"Producto 8",precio:45,img:"imagenes/img8.png"},
+{id:9,nombre:"Producto 9",precio:99,img:"imagenes/img9.png"}
+];
+
+let carrito=JSON.parse(localStorage.getItem('carrito'))||[];
+
+function cargarProductos(){
+let cont=document.getElementById('productos');
+cont.innerHTML="";
+productos.forEach(p=>{
+cont.innerHTML+=`
+<div class="card">
+<img src="${p.img}">
+<h4>${p.nombre}</h4>
+<p>$${p.precio}</p>
+<button onclick="agregar(${p.id})">Agregar</button>
+</div>`;
+});}
+
+function actualizarContador(){
+document.getElementById('count').innerText=carrito.length;
+}
+
+function agregar(id){
+let p=productos.find(x=>x.id===id);
+carrito.push(p);
+localStorage.setItem('carrito',JSON.stringify(carrito));
+mostrarModal("Producto agregado");
+actualizarContador();
+}
+
+function mostrar(v){
+document.getElementById('inicio').style.display=v==='inicio'?'block':'none';
+document.getElementById('carrito').style.display=v==='carrito'?'block':'none';
+if(v==='carrito') cargarCarrito();
+}
+
+function cargarCarrito(){
+let lista=document.getElementById('listaCarrito');
+lista.innerHTML="";
+let total=0;
+carrito.forEach((p,i)=>{
+total+=p.precio;
+lista.innerHTML+=`
+<tr>
+<td><img src="${p.img}" width="50"></td>
+<td>${p.nombre}</td>
+<td>$${p.precio}</td>
+<td><button onclick="eliminar(${i})">X</button></td>
+</tr>`;
+});
+document.getElementById('total').innerText="Total: $"+total;
+}
+
+function eliminar(i){
+carrito.splice(i,1);
+localStorage.setItem('carrito',JSON.stringify(carrito));
+cargarCarrito();
+actualizarContador();
+}
+
+function comprar(){
+if(carrito.length===0)return mostrarModal("Carrito vacío");
+mostrarModal("Gracias por tu compra!");
+carrito=[];
+localStorage.removeItem('carrito');
+cargarCarrito();
+actualizarContador();
+}
+
+function mostrarModal(msg){
+document.getElementById('mensaje').innerText=msg;
+document.getElementById('modal').style.display='flex';
+}
+
+function cerrarModal(){
+document.getElementById('modal').style.display='none';
+}
+
+cargarProductos();
+actualizarContador();
+</script>
+
+</body>
+</html>
